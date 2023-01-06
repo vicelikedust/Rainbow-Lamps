@@ -14,12 +14,15 @@
 #define noOfPixels 16             //No.Of LED's
 Adafruit_NeoPixel strip(noOfPixels, pixelPin, NEO_GRB + NEO_KHZ800);
 
-//Change This Values
+//Change These Values
 int deviceNo = 1;                 //Device Number
 bool ClearColor = true;           //Do you want to clear the broadcast color?
-
 bool Clear = false;
 bool touchState = false;
+
+//Set up non-blocking timer
+unsigned long previousMillis = 0;
+unsigned long currentMillis = 0;
 
 //Universal Mac Address
 uint8_t broadcastAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
@@ -42,8 +45,8 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
   Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
 }
 
-//Called when data is recived
-void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
+//Called when data is received
+void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
   memcpy(&recData, incomingData, sizeof(recData));
   Serial.print("Bytes received: ");
   Serial.println(len);
@@ -97,7 +100,7 @@ void loop()
   else{
     touchState = false;
   }
-      switch(recData.color) {
+    switch(recData.color) {
         case 1:
           colorWipe(strip.Color(255, 0, 0), 10);    // Red
           break;
@@ -132,16 +135,25 @@ void loop()
           colorWipe(strip.Color(0, 0, 255), 10);    // Blue
           break;
     }
-    delay(2000);
+    nonBlockingDelay(2000);
     recData.color = deviceNo;
     Clear = false;
     }
 }
 
 void colorWipe(uint32_t color, int wait) {
-  for(int i=0; i<strip.numPixels(); i++) { 
+  for(int i = 0; i < strip.numPixels(); i++) { 
     strip.setPixelColor(i, color);         
     strip.show();
-    delay(wait);
+    nonBlockingDelay(wait);
+  }
+}
+
+//using a non-blocking delay will prevent any issues with the WiFi
+//Delay() can prevent the esp32 from sending or receiving data
+void nonBlockingDelay(int interval){
+  while(currentMillis - previousMillis <= interval){
+      //check time passed
+      currentMillis = millis();
   }
 }
