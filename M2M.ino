@@ -152,6 +152,7 @@ void colorWipe(uint32_t color, int wait) {
 
 //using a non-blocking delay will prevent any issues with the WiFi
 //Delay() can prevent the esp32 from sending or receiving data
+//best way to handle this is using FreeRTOS, pin wifi task to core 0 and the main function to core 1 then Delay() could be used
 void nonBlockingDelay(int interval){
   while(currentMillis - previousMillis <= interval){
       //check time passed
