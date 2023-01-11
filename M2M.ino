@@ -141,8 +141,9 @@ void loop()
     }
 }
 
+//no need to call a function to get the pixel count, just access it directly
 void colorWipe(uint32_t color, int wait) {
-  for(int i = 0; i < strip.numPixels(); i++) { 
+  for(int i = 0; i < noOfPixels; i++) { 
     strip.setPixelColor(i, color);         
     strip.show();
     nonBlockingDelay(wait);
